@@ -1,0 +1,209 @@
+/*
+ * richohUndistortMain.cpp
+ *
+ *  Created on: Mar 24, 2018
+ *      Author: ros
+ */
+/*
+ * omnidirectionalCamera.cpp
+ *
+ *  Created on: Mar 24, 2018
+ *      Author: ros
+ */
+/*#include "aruco.h"
+#include "cvdrawingutils.h"
+#include "opencv2/imgcodecs.hpp"
+#include "opencv2/highgui.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+#include <stdlib.h>
+#include <opencv2/opencv.hpp>
+#include <opencv2/ccalib/omnidir.hpp>
+#include <opencv2/calib3d.hpp>
+#include <opencv2/videoio.hpp>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <iostream>
+#include <iomanip>
+#include <math.h>
+using namespace cv;
+using namespace std;
+using namespace aruco;
+int main( int argc, char** argv )
+{
+VideoCapture cap(1);
+cap.set(CV_CAP_PROP_BUFFERSIZE,1);
+if(!cap.isOpened()){
+  std::cout << "Error opening video stream or file" << std::endl;
+  return -1;
+}
+
+//float MarkerSize = -1;
+// Create the detector
+MarkerDetector MDetector;
+std::map<uint32_t, MarkerPoseTracker>
+    MTracker;  // use a map so that for each id, we use a different pose tracker
+// Set the dictionary you want to work with, if you included option -d in command line
+// see dictionary.h for all types
+MDetector.setDictionary(0, 0.f);
+
+  Mat imageUndistorted,imageUndistortedPoints, imageRicohLongLati,imageThetaLongLati;
+  Mat imageUndistortedFisheye;
+  Mat Knewr, KnewFish;
+
+  std::vector<Point2f> cornersFisheye,cornersLongLati;
+  Size patternsize(6,4); //interior number of corners
+  std::vector<Point2f> cornersRicoh, cornersTheta;
+  //namedWindow("Ricoh",WINDOW_AUTOSIZE);
+  namedWindow("Theta",WINDOW_AUTOSIZE);
+float alpha = 3.1415926/2;
+  Mat Rr = Mat::eye(3, 3, CV_64F);
+ // Mat Rr = (Mat_<double>(3, 3) <<
+ //     cos(alpha),-sin(alpha),  0,
+ //     sin(alpha), cos(alpha),  0,
+ //     0,			 0, 	   1,
+ //     0,             0,        0);
+  Mat Kr = (Mat_<float>(3,3)<<707.4840525828967,0,319.00808929627726,0,704.834089517769,318.775148282782,0,0,1);
+  Mat Dr = (Mat_<float>(4,1)<<0.2998529572517492,4.841423329005923,-0.0005237710,0.002246682676969527);
+  Mat xir = (Mat_<float>(1,1)<<2.7788083245126405);
+
+  while(1)
+  {
+  Mat image, imageRicoh, imageTheta, imageGrayScale;
+
+  cap >> image;
+  //cvtColor(image,image,CV_BGR2HSV);
+
+  //adaptiveThreshold(imageGrayScale,image,255,ADAPTIVE_THRESH_GAUSSIAN_C,THRESH_BINARY,21,20);
+
+  cv::Rect ricohROI(0, 0, 640, 640);
+  cv::Rect thetaROI(639,0, 640, 640);
+  imageRicoh = image(ricohROI);
+  imageTheta = image(thetaROI);
+
+
+  //cv::Rect ricohSubPart(320,320,150,150);
+  //imageRicoh = imageRicoh(ricohSubPart);
+  //Changing the projection map from fisheye to long-lati projection
+
+  //RICOH SIDE CAMERA
+  //Camera Parameters for Ricoh Side
+
+  Mat mapFishr,mapLongLatir;
+
+  Size new_sizer;
+  new_sizer.width = imageRicoh.cols;
+  new_sizer.height = imageRicoh.rows;
+  int len = std::max(imageRicoh.cols, imageRicoh.rows);
+    Point2f center(len/2., len/2.);
+  int projection_type = 3;
+
+  if (projection_type == 1) {
+  Knewr = (Mat_<float>(3,3)<<new_sizer.width/4,0,center.x,0,new_sizer.height/4,center.y,0,0,1);}
+  else{
+  Knewr = (Mat_<float>(3,3)<<new_sizer.width/(3.1415),0,0,0,new_sizer.height/(3.1415),0,0,0,1);
+  };
+
+  Mat Knewr = (Mat_<float>(3,3)<<new_sizer.width/(3.1415),0,0,0,new_sizer.height/(3.1415),0,0,0,1);
+  Mat imageRicohLongLatiU, imageThresh;
+
+
+  //color detection
+  /*inRange(imageRicoh, Scalar(0,0,0), Scalar(255,255,10), imageThresh);
+  erode(imageThresh, imageThresh, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+  dilate( imageThresh, imageThresh, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+
+  //morphological closing (fill small holes in the foreground)
+  dilate( imageThresh, imageThresh, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+  erode(imageThresh, imageThresh, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+*/
+
+  //omnidir::initUndistortRectifyMap(Kr,Dr,xir,Rr,Knewr,new_sizer,CV_32FC1,mapFishr,mapLongLatir,3);
+  //convertMaps(mapFishr,mapLongLatir,imageRicoh,imageRicohLongLati,CV_16SC2,false);
+  //remap(imageRicoh,imageRicohLongLati,mapFishr,mapLongLatir,INTER_LINEAR,BORDER_TRANSPARENT,0);
+  /*omnidir::undistortImage(imageRicoh,imageRicohLongLati,Kr,Dr,xir,projection_type,Knewr,new_sizer,Rr);
+
+  //imageRicohLongLati = imageRicoh;
+MDetector.setDictionary()
+  //ARUCO MARKER DETECTION
+  vector<Marker> Markers = MDetector.detect(imageRicohLongLati);
+
+  for (unsigned int i = 0; i < Markers.size(); i++)
+             {
+                 cout << Markers[i] << endl;
+                 Markers[i].draw(imageRicohLongLati, Scalar(0, 0, 255), 2);
+             }
+
+
+  /*bool patternfoundLL = cv::findChessboardCorners(imageRicohLongLati, patternsize, cornersLongLati);
+   //print(corners);
+  drawChessboardCorners(imageRicohLongLati, patternsize, Mat(cornersLongLati), patternfoundLL);
+
+
+   cv::Rect rectLL = cv::boundingRect(cornersLongLati);
+   //while rect.tl truly returns minX and minY for given points dataset
+   cv::Point minValLL = rectLL.tl();
+   //the rect.br isn't returning exactly maxX and maxY
+   //it actually returns maxX+1 and maxY+1
+   cv::Point maxValLL = rectLL.br();
+   cv::Point ChessCenterLL = (minValLL + maxValLL)*0.5;
+
+   double ratioLL = (double)ChessCenterLL.x/new_sizer.width;
+   double angleLL = 180*(ratioLL-0.5);
+
+   bool patternfoundF = cv::findChessboardCorners(imageRicoh, patternsize, cornersFisheye,
+    CALIB_CB_ADAPTIVE_THRESH + CALIB_CB_NORMALIZE_IMAGE
+           + CALIB_CB_FAST_CHECK);
+   //print(corners);
+   drawChessboardCorners(image, patternsize, Mat(cornersFisheye), patternfoundF);
+
+
+   cv::Rect rectF = cv::boundingRect(cornersFisheye);
+   //while rect.tl truly returns minX and minY for given points dataset
+   cv::Point minValF = rectF.tl();
+   //the rect.br isn't returning exactly maxX and maxY
+   //it actually returns maxX+1 and maxY+1
+   cv::Point maxValF = rectF.br();
+   cv::Point ChessCenterF = (minValF + maxValF)*0.5;
+   double ratioF = ((double)ChessCenterF.x)/640;
+
+   double angleF = 180*(ratioF-0.5);
+
+printf("%s%f%s%f","angleFish=",angleF," angleLongLati=",angleLL);
+cout << endl;*/
+   //printf("%s%f","angleLongLati=",angleLL);
+   //cout << endl;
+  //
+  //THETA SIDE CAMERA
+  /*//Camera Parameters for Theta Side
+
+  Mat Rt = Mat::eye(3, 3, CV_64F);
+  Mat Kt = (Mat_<float>(3,3)<<407.92227018628626,0,320.9318532010427,0,407.0041949450622,318.59521066826443,0,0,1);
+  Mat Dt = (Mat_<float>(4,1)<<-0.2518759365548172,0.014820783852654095,0.0003001657381131637,-0.002615996139860705);
+  Mat xit = (Mat_<float>(1,1)<<1.1734956805474823);
+*/
+
+
+  //pattern detection on RICOH side
+  //imshow("RicohLongLati",imageRicoh);
+  /*imshow("Ricoh",imageRicoh);
+  imshow("RicohLongLati",imageRicohLongLati);
+
+  waitKey(2);
+
+  }
+
+
+  cap.release();
+
+  // Closes all the frames
+  destroyAllWindows();
+  return 0;
+}
+*/
+
+
+
+
+
+
