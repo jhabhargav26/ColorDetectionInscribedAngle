@@ -71,4 +71,55 @@ for (unsigned int i = 0; i < TheMarkers.size(); i++)
 return angles;
 	}
 
+angles inscribedAngleCalcColor(Point TargetCenter, Point LaunchCenter, int resizeFactor)
+{
+
+angles angles;
+Point2f center, centerRicoh, centerTheta;
+//ANGLE DETECTION CODE
+//angle calculation RICOH side
+double angle;
+double launchAngle =1000;
+double targetAngle =1000;
+
+				//target Angle calculation
+                center=TargetCenter;
+                if(center.y<640)
+                {
+                double ratioR = ((double)center.x)/(640*resizeFactor);
+                angle = 180*(ratioR-0.5);
+                }
+                else
+                {
+                double ratioT = ((double)center.x-(640.0*resizeFactor))/(640*resizeFactor);
+                angle = 180*(ratioT-0.5)+180;
+                }
+                if(angle<0.0){angle = 360+angle;}
+                targetAngle = angle;
+
+
+                //launch Angle calculation
+
+                center=LaunchCenter;
+                if(center.y<640)
+                {
+                double ratioR = ((double)center.x)/(640*resizeFactor);
+                angle = 180*(ratioR-0.5);
+                }
+                else
+                {
+                double ratioT = ((double)center.x-(640.0*resizeFactor))/(640*resizeFactor);
+                angle = 180*(ratioT-0.5)+180;
+                }
+                if(angle<0.0){angle = 360+angle;}
+                launchAngle = angle;
+
+
+	angles.launchAngle = launchAngle;
+	angles.targetAngle = targetAngle;
+	angles.inscribedAngle = launchAngle - targetAngle;
+
+return angles;
+	}
+
 

@@ -38,19 +38,19 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: FisheyeObjectDetection
+all: ColorDetectionInscribedAngle
 
 # Tool invocations
-FisheyeObjectDetection: $(OBJS) $(USER_OBJS)
+ColorDetectionInscribedAngle: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++ -L/user/local/lib/opencv -L/usr/local/lib -L/home/ros/apriltags -o "FisheyeObjectDetection" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -L/user/local/lib/opencv -L/usr/local/lib -L/home/ros/apriltags -o "ColorDetectionInscribedAngle" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(OBJS)$(C++_DEPS)$(C_DEPS)$(CC_DEPS)$(CPP_DEPS)$(EXECUTABLES)$(CXX_DEPS)$(C_UPPER_DEPS) FisheyeObjectDetection
+	-$(RM) $(OBJS)$(C++_DEPS)$(C_DEPS)$(CC_DEPS)$(CPP_DEPS)$(EXECUTABLES)$(CXX_DEPS)$(C_UPPER_DEPS) ColorDetectionInscribedAngle
 	-@echo ' '
 
 .PHONY: all clean dependents

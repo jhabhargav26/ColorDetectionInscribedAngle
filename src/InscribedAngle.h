@@ -35,7 +35,7 @@ typedef struct angles{
 }angles;
 
 angles inscribedAngleCalc(vector<Marker> TheMarkers, int TargetID, int LaunchID, int resizeFactor=1);
-
+angles inscribedAngleCalcColor(Point TargetCenter, Point LaunchCenter, int resizeFactor=1);
 
 
 
